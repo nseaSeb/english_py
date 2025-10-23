@@ -1,6 +1,7 @@
 # 🎧 Voice & TTS Practice App
 
 Application interactive pour pratiquer l'anglais avec reconnaissance vocale et synthèse vocale (Text-to-Speech).
+<img width="1242" height="568" alt="image" src="https://github.com/user-attachments/assets/36aea02e-f036-48f6-9efd-36d9a672dafd" />
 
 ## 📋 Fonctionnalités
 
@@ -38,7 +39,7 @@ PyAudio devrait s'installer automatiquement avec pip. Si vous rencontrez des pro
 ### 1. Cloner ou télécharger le projet
 
 ```bash
-git clone <votre-repo>
+git clone https://github.com/nseaSeb/english_py.git
 cd voice-tts-app
 ```
 
