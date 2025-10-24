@@ -226,10 +226,32 @@ def say_custom_text(text):
     play_tts_simple(text)
     return f"🔊 {text}"
 
-# Interface Gradio avec trois onglets
+# --- Onglet des paramètres audio ---
+def get_audio_devices():
+    """Retourne la liste des périphériques audio disponibles"""
+    devices = sd.query_devices()
+    input_devices = [f"{i}: {d['name']}" for i, d in enumerate(devices) if d['max_input_channels'] > 0]
+    output_devices = [f"{i}: {d['name']}" for i, d in enumerate(devices) if d['max_output_channels'] > 0]
+    return input_devices, output_devices
+
+def set_audio_devices(input_device, output_device):
+    """Applique les périphériques sélectionnés comme valeurs par défaut"""
+    try:
+        input_index = int(input_device.split(":")[0])
+        output_index = int(output_device.split(":")[0])
+        sd.default.device = (input_index, output_index)
+        return f"✅ Input: {input_device}\n✅ Output: {output_device}"
+    except Exception as e:
+        return f"❌ Erreur: {e}"
+
+# Récupération des devices disponibles
+input_devices, output_devices = get_audio_devices()
+
+# ------------------------------------------------------
+# Ton interface principale
+# ------------------------------------------------------
 with gr.Blocks() as demo:
     gr.Markdown("# 🎧 Voice & TTS Practice App")
-    
 
     with gr.Tab("🎙️ Speech Recognition"):
         gr.Markdown("Speak into the microphone. The app will recognize what you said and reply aloud.")
@@ -237,8 +259,6 @@ with gr.Blocks() as demo:
         stt_output = gr.Textbox(label="Recognized text")
         mic_button = gr.Button("Transcribe & Speak Back")
         mic_button.click(fn=recognize_and_reply, inputs=mic_input, outputs=stt_output)
-        
-        # Bouton de répétition dans l'onglet
         with gr.Row():
             tab_repeat_button = gr.Button("🔁 Répéter la réponse", variant="secondary")
             tab_repeat_output = gr.Textbox(label="Status", interactive=False)
@@ -248,33 +268,48 @@ with gr.Blocks() as demo:
         random_output = gr.Textbox(label="Sentence played", interactive=False)
         random_button = gr.Button("🎲 Choose & Speak a Sentence")
         random_button.click(fn=say_random_sentence, outputs=random_output)
-        
-        # Bouton de répétition dans l'onglet
         with gr.Row():
             random_repeat_button = gr.Button("🔁 Répéter la phrase", variant="secondary")
             random_repeat_output = gr.Textbox(label="Status", interactive=False)
 
     with gr.Tab("✍️ Custom Text"):
         gr.Markdown("Type any text below and click the button to hear it spoken aloud.")
-        custom_input = gr.Textbox(
-            label="Your text",
-            placeholder="Type your sentence here...",
-            lines=3
-        )
+        custom_input = gr.Textbox(label="Your text", placeholder="Type your sentence here...", lines=3)
         custom_output = gr.Textbox(label="Text played", interactive=False)
         custom_button = gr.Button("🔊 Speak This Text")
         custom_button.click(fn=say_custom_text, inputs=custom_input, outputs=custom_output)
-        
-        # Bouton de répétition dans l'onglet
         with gr.Row():
             custom_repeat_button = gr.Button("🔁 Répéter le texte", variant="secondary")
             custom_repeat_output = gr.Textbox(label="Status", interactive=False)
 
-    gr.Markdown("App powered by Python, PiperTTS and Gradio.")
-    
-    # Connexions des boutons de répétition
+    # 🆕 Onglet des paramètres audio
+    with gr.Tab("⚙️ Audio Settings"):
+        gr.Markdown("### Sélection des périphériques audio")
+
+        input_dropdown = gr.Dropdown(
+            label="🎤 Input device",
+            choices=input_devices,
+            value=input_devices[0] if input_devices else None
+        )
+        output_dropdown = gr.Dropdown(
+            label="🔊 Output device",
+            choices=output_devices,
+            value=output_devices[0] if output_devices else None
+        )
+        apply_button = gr.Button("✅ Appliquer les paramètres audio")
+        settings_output = gr.Textbox(label="Résultat", interactive=False)
+
+        apply_button.click(
+            fn=set_audio_devices,
+            inputs=[input_dropdown, output_dropdown],
+            outputs=settings_output
+        )
+
+    # Boutons de répétition globaux
     tab_repeat_button.click(fn=repeat_last_audio, outputs=tab_repeat_output)
     random_repeat_button.click(fn=repeat_last_audio, outputs=random_repeat_output)
     custom_repeat_button.click(fn=repeat_last_audio, outputs=custom_repeat_output)
+
+    gr.Markdown("App powered by Python, PiperTTS and Gradio.")
 
 demo.launch()
